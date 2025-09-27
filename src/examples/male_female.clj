@@ -1,4 +1,4 @@
-(ns examples.male_female)
+(ns examples.male-female)
 
 (declare m f)
 

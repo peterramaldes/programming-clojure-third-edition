@@ -80,3 +80,14 @@
   (if (= n 0)
     true
     (my-odd? (dec n))))
+
+(defn parity [n]
+  (loop [n n par 0]
+    (if (= n 0)
+      par
+      (recur (dec n) (- 1 par)))))
+
+(defn my-even? [n] (= 0 (parity n)))
+(defn my-odd? [n] (= 1 (parity n)))
+
+

@@ -25,4 +25,7 @@
     true
     #(my-odd? (dec n))))
 
+(comment
+  trampoline)
+
 
