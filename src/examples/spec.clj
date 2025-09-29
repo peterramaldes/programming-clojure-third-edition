@@ -1,5 +1,6 @@
 (ns examples.spec
-  (:require [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            [clojure.spec.test.alpha :as stest]))
 
 (defn scale-ingredient [ingredient factor]
   (update ingredient :quantity * factor))
@@ -176,13 +177,58 @@
   )
 
 ;; Multi-arity Argument Lists
+(s/def ::repeat-args
+  (s/cat :n (s/? int?) :x any?))
 
+(comment
+  (s/conform ::repeat-args [100 "foo"])
+  (s/conform ::repeat-args ["foo"])
+  (s/conform ::repeat-args [])
+  )
 
+;; Specifying Functions
+(s/def ::rand-args (s/cat :n (s/? number?)))
+(s/def ::rand-ret double?)
+(s/def ::rand-fn
+  (fn [{:keys [args ret]}]
+    (let [n (or (:n args) 1)]
+      (cond (zero? n) (zero? ret)
+            (pos? n) (and (>= ret 0) (< ret n))
+            (neg? n) (and (<= ret 0) (> ret n))))))
 
+(s/fdef clojure.core/rand
+        :args ::rand-args
+        :ret ::rand-ret
+        :fn ::rand-fn)
 
+;; Anonymous Functions
+(defn opposite [pred]
+  (comp not pred))
 
+(s/def ::pred
+  (s/fspec :args (s/cat :x any?)
+           :ret boolean?))
 
+(s/fdef opposite
+        :args (s/cat :pred ::pred)
+        :ret ::pred)
 
+;; Instrumenting Functions
+(stest/instrument 'clojure.core/rand)
+(stest/instrument (stest/enumerate-namespace 'clojure.core))
+
+(rand :boom)
+
+;; Generative Function Testing
+
+(s/fdef clojure.core/symbol
+        :args (s/cat :ns (s/? string?) :name string?)
+        :ret symbol?
+        :fn (fn [{:keys [args ret]}]
+              (and (= (name ret) (:name args))
+                   (= (namespace ret) (:ns args)))))
+
+(stest/check 'clojure.core/symbol)
 
 
 
