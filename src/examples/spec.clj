@@ -1,6 +1,8 @@
 (ns examples.spec
   (:require [clojure.spec.alpha :as s]
-            [clojure.spec.test.alpha :as stest]))
+            [clojure.spec.test.alpha :as stest]
+            [clojure.spec.gen.alpha :as gen]
+            [clojure.string :as str]))
 
 (defn scale-ingredient [ingredient factor]
   (update ingredient :quantity * factor))
@@ -230,50 +232,34 @@
 
 (stest/check 'clojure.core/symbol)
 
+(comment
+  (s/exercise (s/cat :ns (s/? string?) :name string?))
+  )
 
+;; Combining Generators With s/and
 
+(defn big? [x] (> x 100))
+(s/def ::big-odd (s/and odd? big?))
+(s/exercise ::big-odd)
 
+(s/def ::big-odd-int (s/and int? odd? big?))
 
+(comment
+  (s/exercise ::big-odd-int)
+  )
 
+;; Creating Custom Generators
+(s/def :marble/color #{:red :blue :green})
 
+(s/def :marble/color-red
+  (s/with-gen :marble/color #(s/gen #{:red})))
 
+(s/exercise :marble/color-red)
 
+(s/def ::sku
+  (s/with-gen (s/and string? #(str/starts-with? % "SKU-"))
+              (fn [] (gen/fmap #(str "SKU-" %) (s/gen string?)))))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+(comment
+  (s/exercise ::sku)
+  )
